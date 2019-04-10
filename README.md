@@ -184,11 +184,9 @@ seq = iaa.Sequential([
 ## 输出
 
 运行augmentation.py ，运行结束后即可得到增强的影像和对应的xml文件夹
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153058242.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000001.jpg)
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153108215.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000251.jpg)
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153413445.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153425958.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153433430.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/2018112515344467.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000501.jpg)
+![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000751.jpg)
