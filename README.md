@@ -128,9 +128,9 @@ new_bndbox_list = []
 
 输入数据为两个文件夹一个是需要增强的影像数据（JPEGImages），一个是对应的xml文件（Annotations）。**注意：影像文件名需和xml文件名相对应！**
 
-![Annotations](https://img-blog.csdnimg.cn/20181125152842316.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
+![Annotations](https://github.com/xinyu-ch/ReadMePhoto/blob/master/QQ%E6%88%AA%E5%9B%BE20190410155858.png)
 
-![JPEGImages](https://img-blog.csdnimg.cn/20181125152918559.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
+![JPEGImages](https://github.com/xinyu-ch/ReadMePhoto/blob/master/QQ%E6%88%AA%E5%9B%BE20190410155921.png)
 
 ## 设置文件路径
 
