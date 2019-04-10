@@ -36,59 +36,26 @@ pip install imgaug
 读取xml文件并使用ElementTree对xml文件进行解析，找到每个object的坐标值。
 
 ```python
-def read_xml_annotation(root, image_id):
-    in_file = open(os.path.join(root, image_id))
-    tree = ET.parse(in_file)
-    root = tree.getroot()
-    bndboxlist = []
-
-    for object in root.findall('object'):  # 找到root节点下的所有object节点
-        bndbox = object.find('bndbox')  # 子节点下节点rank的值
-
-        xmin = int(bndbox.find('xmin').text)
-        xmax = int(bndbox.find('xmax').text)
-        ymin = int(bndbox.find('ymin').text)
-        ymax = int(bndbox.find('ymax').text)
-        # print(xmin,ymin,xmax,ymax)
-        bndboxlist.append([xmin,ymin,xmax,ymax])
-        # print(bndboxlist)
-
-    bndbox = root.find('object').find('bndbox')
-    return bndboxlist
-```
-
-### 生成变换后的bounding boxe坐标文件
-
-传入目标变换后的bounding boxe坐标，将原坐标替换成新坐标并生成新的xml文件。
-
-```python
-def change_xml_list_annotation(root, image_id, new_target,saveroot,id):
+def change_xml_annotation(root, image_id, new_target):
+    new_xmin = new_target[0]
+    new_ymin = new_target[1]
+    new_xmax = new_target[2]
+    new_ymax = new_target[3]
 
     in_file = open(os.path.join(root, str(image_id) + '.xml'))  # 这里root分别由两个意思
     tree = ET.parse(in_file)
     xmlroot = tree.getroot()
-    index = 0
-
-    for object in xmlroot.findall('object'):  # 找到root节点下的所有country节点
-        bndbox = object.find('bndbox')  # 子节点下节点rank的值
-
-        new_xmin = new_target[index][0]
-        new_ymin = new_target[index][1]
-        new_xmax = new_target[index][2]
-        new_ymax = new_target[index][3]
-
-        xmin = bndbox.find('xmin')
-        xmin.text = str(new_xmin)
-        ymin = bndbox.find('ymin')
-        ymin.text = str(new_ymin)
-        xmax = bndbox.find('xmax')
-        xmax.text = str(new_xmax)
-        ymax = bndbox.find('ymax')
-        ymax.text = str(new_ymax)
-
-        index = index + 1
-
-    tree.write(os.path.join(saveroot, str(image_id) + "_aug_" + str(id) + '.xml'))
+    object = xmlroot.find('object')
+    bndbox = object.find('bndbox')
+    xmin = bndbox.find('xmin')
+    xmin.text = str(new_xmin)
+    ymin = bndbox.find('ymin')
+    ymin.text = str(new_ymin)
+    xmax = bndbox.find('xmax')
+    xmax.text = str(new_xmax)
+    ymax = bndbox.find('ymax')
+    ymax.text = str(new_ymax)
+    tree.write(os.path.join(root, str("%06d" % (str(id) + '.xml'))))
 ```
 
 ### 生成变换序列
@@ -96,18 +63,18 @@ def change_xml_list_annotation(root, image_id, new_target,saveroot,id):
 产生一个处理图片的Sequential。
 
 ```python
+# 影像增强
 seq = iaa.Sequential([
-        iaa.Flipud(0.5),  # vertically flip 20% of all images
-        iaa.Fliplr(0.5),  # 镜像
-        iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
-        iaa.GaussianBlur(sigma=(0, 3.0)),
-        # iaa.GaussianBlur(0.5),
-        iaa.Affine(
-            translate_px={"x": 15, "y": 15},
-            scale=(0.8, 0.95),
-            rotate=(-30, 30)
-        )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
-    ])
+    iaa.Flipud(0.5),  # vertically flip 20% of all images
+    iaa.Fliplr(0.5),  # 镜像
+    iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
+    iaa.GaussianBlur(sigma=(0, 3.0)),  # iaa.GaussianBlur(0.5),
+    iaa.Affine(
+        translate_px={"x": 15, "y": 15},
+        scale=(0.8, 0.95),
+        rotate=(-30, 30)
+    )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
+])
 ```
 
 ### bounding box 变化后坐标计算
@@ -115,22 +82,44 @@ seq = iaa.Sequential([
 先读取该影像对应xml文件，获取所有目标的bounding boxes，然后依次计算每个box变化后的坐标。
 
 ```python
-bndbox = read_xml_annotation(XML_DIR, name)
-for epoch in range(AUGLOOP):
-    seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
-
-    # 读取图片
-    img = Image.open(os.path.join(IMG_DIR, name[:-4] + '.jpg'))
-    img = np.array(img)
-
-    # bndbox 坐标增强
-    for i in range(len(bndbox)):
-        bbs = ia.BoundingBoxesOnImage([
+seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
+# 读取图片
+img = Image.open(os.path.join(IMG_DIR, name[:-4] + '.jpg'))
+# sp = img.size
+img = np.asarray(img)
+# bndbox 坐标增强
+for i in range(len(bndbox)):
+    bbs = ia.BoundingBoxesOnImage([
         ia.BoundingBox(x1=bndbox[i][0], y1=bndbox[i][1], x2=bndbox[i][2], y2=bndbox[i][3]),
-        ], shape=img.shape)
+    ], shape=img.shape)
 
-        bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
-        boxes_img_aug_list.append(bbs_aug)
+    bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
+    boxes_img_aug_list.append(bbs_aug)
+
+    # 此处运用了一个max，一个min （max是为了方式变化后的box小于1，min是为了防止变化后的box的坐标超出图片，在做faster r-cnn训练的时候，box的坐标会减1，若坐标小于1,就会报错，当然超出图像范围也会报错）
+    n_x1 = int(max(1, min(img.shape[1], bbs_aug.bounding_boxes[0].x1)))
+    n_y1 = int(max(1, min(img.shape[0], bbs_aug.bounding_boxes[0].y1)))
+    n_x2 = int(max(1, min(img.shape[1], bbs_aug.bounding_boxes[0].x2)))
+    n_y2 = int(max(1, min(img.shape[0], bbs_aug.bounding_boxes[0].y2)))
+    if n_x1 == 1 and n_x1 == n_x2:
+        n_x2 += 1
+    if n_y1 == 1 and n_y2 == n_y1:
+        n_y2 += 1
+    if n_x1 >= n_x2 or n_y1 >= n_y2:
+        print('error', name)
+    new_bndbox_list.append([n_x1, n_y1, n_x2, n_y2])
+# 存储变化后的图片
+image_aug = seq_det.augment_images([img])[0]
+path = os.path.join(AUG_IMG_DIR,
+                    str("%06d" % (len(files) + int(name[:-4]) + epoch * 250)) + '.jpg')
+image_auged = bbs.draw_on_image(image_aug, thickness=0)
+Image.fromarray(image_auged).save(path)
+
+# 存储变化后的XML--此处可根据需要更改文件具体的名称
+change_xml_list_annotation(XML_DIR, name[:-4], new_bndbox_list, AUG_XML_DIR,
+                           len(files) + int(name[:-4]) + epoch * 250)
+print(str("%06d" % (len(files) + int(name[:-4]) + epoch * 250)) + '.jpg')
+new_bndbox_list = []
 ```
 
 # 使用示例
@@ -146,15 +135,22 @@ for epoch in range(AUGLOOP):
 ## 设置文件路径
 
 ```python
-    IMG_DIR = "./dataset/JPEGImages" #输入的影像文件夹路径
-    XML_DIR = "./dataset/Annotations" # 输入的XML文件夹路径
+IMG_DIR = "../create-pascal-voc-dataset/examples/VOC2007/JPEGImages"
+XML_DIR = "../create-pascal-voc-dataset/examples/VOC2007/Annotations"
 
+AUG_XML_DIR = "./Annotations"  # 存储增强后的XML文件夹路径
+try:
+    shutil.rmtree(AUG_XML_DIR)
+except FileNotFoundError as e:
+    a = 1
+mkdir(AUG_XML_DIR)
 
-    AUG_XML_DIR = "./dataset/AUG_XML" # 存储增强后的XML文件夹路径
-    mkdir(AUG_XML_DIR)
-
-    AUG_IMG_DIR = "./dataset/AUG_IMG" # 存储增强后的影像文件夹路径
-    mkdir(AUG_IMG_DIR)
+AUG_IMG_DIR = "./JPEGImages"  # 存储增强后的影像文件夹路径
+try:
+    shutil.rmtree(AUG_IMG_DIR)
+except FileNotFoundError as e:
+    a = 1
+mkdir(AUG_IMG_DIR)
 ```
 
 
@@ -171,24 +167,23 @@ for epoch in range(AUGLOOP):
 
 ```python
 seq = iaa.Sequential([
-        iaa.Flipud(0.5),  # vertically flip 50% of all images
-        iaa.Fliplr(0.5),  # 镜像
-        iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
-        iaa.GaussianBlur(sigma=(0, 0.5)),
-         # iaa.GaussianBlur(0.5),
-        iaa.Affine(
-            translate_px={"x": 15, "y": 15},
-            scale=(0.8, 0.95),
-            rotate=(-30, 30)
-        )  
-    ])
+    iaa.Flipud(0.5),  # v翻转
+    iaa.Fliplr(0.5),  # 镜像
+    iaa.Multiply((1.2, 1.5)),  # 改变明亮度
+    iaa.GaussianBlur(sigma=(0, 3.0)),  # 高斯噪声
+    iaa.Affine(
+        translate_px={"x": 15, "y": 15},
+        scale=(0.8, 0.95),
+        rotate=(-30, 30)
+    )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
+])
 ```
 
 
 
 ## 输出
 
-运行XMLaug.py ，运行结束后即可得到增强的影像和对应的xml文件夹
+运行augmentation.py ，运行结束后即可得到增强的影像和对应的xml文件夹
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153058242.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125153108215.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2Nvb29vMGw=,size_16,color_FFFFFF,t_70)
