@@ -190,4 +190,3 @@ seq = iaa.Sequential([
 
 ![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000501.jpg)
 
-![在这里插入图片描述](https://github.com/xinyu-ch/ReadMePhoto/blob/master/000751.jpg)
